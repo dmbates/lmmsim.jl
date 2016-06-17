@@ -1,1 +1,4 @@
 julia 0.4
+MixedModels 0.5.4
+DataFrames 0.7
+DataStructures
