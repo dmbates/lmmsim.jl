@@ -86,11 +86,11 @@ The alternative is to create the entire array and change elements at particular 
 
 ```julia
 function bootstrap{T}(m::LinearMixedModel{T}, N)
-    y₀, β, σ, Θ = copy(model_response(m)), fixef(m), sdest(m), m[:Θ]
+    y₀, β, σ, θ = copy(model_response(m)), fixef(m), sdest(m), m[:θ]
     σv = sizehint!(T[], N)   # storage for σ values
     objv = sizehint!(T[], N)
     for _ in 1 : N
-        simulate!(m, β = β, σ = σ, Θ = Θ) # simulate in place
+        simulate!(m, β = β, σ = σ, θ = θ) # simulate in place
         push!(σv, sdest(refit!(m)))
         push!(objv, objective(m))
     end
