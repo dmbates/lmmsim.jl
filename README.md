@@ -56,3 +56,43 @@ julia> objectives
 
 An alternative is to create a function patterned on `simulate` that creates the storage and saves the
 results in line, rather than through a callback.
+
+The general approach is to pass in the model(s) and parameter values from which to simulate the
+response.  The important functions are `simulate!`, which simulates in place a response vector from
+a `LinearMixedModel` using the supplied values for the parameters, β, σ and θ, passed as named
+arguments, and `refit!`, which fits the model to a new response.
+
+Within the function the results can be saved to arrays, either by creating an empty array and
+`push!`ing results on the end, or by creating an array of the appropriate size and using counters
+to determine the index position.
+
+## Parametric Bootstrap of a single model
+
+Suppose we wished to perform a parametric bootstrap.  That is, we simulate `N` responses from the
+estimated parameter values, refit the model, and save some characteristics of the model.  Because
+the bootstrap involves many repetitions of simulating, fitting and storing results, it is worthwhile
+devoting some energy to optimizing these steps.  In particular we want to avoid creating vectors
+that need to subsequently be garbage-collected.
+
+### Saving numeric values within a function
+
+Julia has "growable" arrays so one technique is to create an empty array of the desired type and
+`push!` values onto the end or `append!` vectors.  If you know the eventual size of the array, use
+`sizehint!` when initializing it.
+
+The alternative is to create the entire array and change elements at particular indices.
+
+### Example of a parametric bootstrap
+
+```julia
+function bootstrap{T}(m::LinearMixedModel{T}, N)
+    y₀, β, σ, Θ = copy(model_response(m)), fixef(m), sdest(m), m[:Θ]
+    σv = sizehint!(T[], N)   # storage for σ values
+    objv = sizehint!(T[], N)
+    for _ in 1 : N
+        simulate!(m, β = β, σ = σ, Θ = Θ) # simulate in place
+        push!(σv, sdest(refit!(m)))
+        push!(objv, objective(m))
+    end
+end
+```
