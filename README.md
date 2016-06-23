@@ -94,5 +94,7 @@ function bootstrap{T}(m::LinearMixedModel{T}, N)
         push!(σv, sdest(refit!(m)))
         push!(objv, objective(m))
     end
+    refit!(m, y₀)   # restore to original settings
+    σv, objv
 end
 ```
